@@ -1,0 +1,188 @@
+Question 1
+setwd("/Users/rahmajebali/Desktop/regression/travail2")
+Q1<- read.table("Homework.txt",header=TRUE)
+Q1
+math<-Q1$math
+homework<-Q1$homework
+white<-Q1$white
+schid<-Q1$schid
+ratio<-Q1$ratio
+# Regression ordinaire, modele complet, pour visualiser residus
+Resultat.lm <- lm(math~homework+white+ratio+
+                  +homework:ratio+homework:white,data=Q1)
+summary(Resultat.lm )
+install.packages('lme4')
+
+library(lme4)
+
+# Choix des formes des matrices D et V
+# Option 1: VC pour V, UN pour D
+Resultat.VCUN_1 <- lmer(math~homework+ratio+white+homework:ratio+homework:white+
+                      (homework|schid),data=Q1,REML=TRUE)
+extractAIC(Resultat.VCUN_1)
+# Option 1b: VC pour V, UN(1) pour D
+Resultat.VCUN0 <-lmer(math~homework+ratio+white+homework:ratio+homework:white+
+                      (homework||schid)
+                        ,data=Q1,REML=TRUE)
+extractAIC(Resultat.VCUN0)
+
+# Modele avec seulement l'ordonnee a l'origine aleatoire
+Resultat.VCUN_2 <- lmer(math~homework+ratio+white+homework:ratio+homework:white+
+                      (1|schid),data=Q1,REML=TRUE)
+# Test du rapport des vraisemblances pour H_0: Resultat.VCUN_2
+# vs H1: Resultat.VCUN_1
+xi1 <- 2*(logLik(Resultat.VCUN_1)-logLik(Resultat.VCUN_2))
+pval1 <- 0.5*(1-pchisq(xi1,1))
+pval1
+
+install.packages('car')
+
+library(car)
+
+# Selection des effets fixes, methode BACKWARD
+Anova(Resultat.VCUN_1,type=3)
+
+Resultat.VCUN_3 <- lmer(math~homework+ratio+white+homework:ratio+
+                      (homework|schid),data=Q1,REML=TRUE)
+Anova(Resultat.VCUN_3,type=3)
+
+Resultat.VCUN_4 <- lmer(math~homework+ratio+white+
+                      (homework|schid),data=Q1,REML=TRUE)
+Anova(Resultat.VCUN_4,type=3)
+
+Resultat.VCUN_5 <- lmer(math~homework+white+
+                      (homework|schid),data=Q1,REML=TRUE)
+Anova(Resultat.VCUN_5,type=3)
+
+summary(Resultat.VCUN_5)
+
+meanses<-Q1$meanses
+
+# Choix des formes des matrices D et V
+# Option 1: VC pour V, UN pour D
+Resultat.VCUN_b1 <- lmer(math~homework+meanses+white+ratio+homework:meanses+homework:ratio
+                +homework:white+(homework|schid)+(homework:meanses|schid),data=Q1,REML=TRUE)
+extractAIC(Resultat.VCUN_b1)
+# Option 1b: VC pour V, UN(1) pour D
+Resultat.VCUN_b0 <- lmer(math~homework+meanses+white+ratio+homework:meanses++homework:ratio
+              +homework:white+(homework||schid)+(homework:meanses||schid),data=Q1,REML=TRUE)
+extractAIC(Resultat.VCUN_b0)
+
+# Modele avec l'ordonnee et la pente aleatoires
+Resultat.VCUN_b2<- lmer(math~homework+meanses+white+ratio+homework:meanses+homework:ratio
+                +homework:white+(homework|schid),data=Q1,REML=TRUE)
+# Test du rapport des vraisemblances pour H_0: Resultat.VCUN_b2
+# vs H1: Resultat.VCUN_b1
+xib1 <- 2*(logLik(Resultat.VCUN_b1)-logLik(Resultat.VCUN_b2))
+pvalb1 <- 0.5*(1-pchisq(xib1,1))
+pvalb1
+
+# Modele avec seulement l'ordonnee aleatoire 
+Resultat.VCUN_b3<- lmer(math~homework+meanses+white+ratio+homework:meanses+homework:ratio
+                +homework:white+(1|schid),data=Q1,REML=TRUE)
+# Test du rapport des vraisemblances pour H_0: Resultat.VCUN_b3
+# vs H1: Resultat.VCUN_b2
+xib2 <- 2*(logLik(Resultat.VCUN_b2)-logLik(Resultat.VCUN_b3))
+pvalb2 <- 0.5*(1-pchisq(xib2,1))
+pvalb2
+
+Anova(Resultat.VCUN_b2,type=3)
+
+Resultat.VCUN_b4<- lmer(math~homework+meanses+white+ratio+homework:meanses+homework:ratio
+                +(homework|schid),data=Q1,REML=TRUE)
+Anova(Resultat.VCUN_b4,type=3)
+
+Resultat.VCUN_b5<- lmer(math~homework+meanses+white+ratio+homework:meanses
+                +(homework|schid),data=Q1,REML=TRUE)
+Anova(Resultat.VCUN_b5,type=3)
+
+Resultat.VCUN_b6<- lmer(math~homework+meanses+white+ratio 
+                        +(homework|schid),data=Q1,REML=TRUE)
+Anova(Resultat.VCUN_b6,type=3)
+
+Resultat.VCUN_b7<- lmer(math~homework+meanses+white 
+                        +(homework|schid),data=Q1,REML=TRUE)
+Anova(Resultat.VCUN_b7,type=3)
+
+summary(Resultat.VCUN_b7)
+
+Question 2
+
+setwd("/Users/rahmajebali/Desktop/regression/travail2")
+
+Q2<- read.table("GirlsGrowth.dat",header=TRUE)
+
+age<-Q2$age
+group<-Q2$group
+child<-Q2$child
+
+#RŽgression linŽaire ordinaire
+GirlsGrowth.lm <- lm(height~age+factor(group),data=Q2)
+ID <- unique(Q2$child[])
+resid.lm <- residuals(GirlsGrowth.lm)
+                                           
+
+
+plot(Q2$age[GirlsGrowth$child==ID[1]],resid.lm[Q2$child==ID[1]],col=ID[1],
+     type="l",xlab="age",ylab="RŽsidu",ylim=c(-7,7),
+     main="RŽsidus de la rŽgression ordinaire")
+for(i in 2:length(ID)){
+  lines(Q2$age[Q2$child==ID[i]],resid.lm[Q2$child==ID[i]],col=ID[i])
+}
+
+
+install.packages('lme4')
+
+library('lme4')
+
+install.packages('car')
+
+#RŽgression linŽaire mixte
+GirlsGrowth.VCUN0 <- lmer(height~age+factor(group)+(age|child)
+,data=GirlsGrowth,REML=TRUE)
+
+extractAIC(GirlsGrowth.VCUN0)
+
+GirlsGrowth.VCUN1 <- lmer(height~age+factor(group)+(age||child),data=GirlsGrowth,REML=TRUE)
+
+extractAIC(GirlsGrowth.VCUN1)
+
+GirlsGrowth.VCUN2 <- lmer(height~age+factor(group)+(1|child)
+,data=GirlsGrowth,REML=TRUE)
+
+
+xi1 <- 2*(logLik(GirlsGrowth.VCUN0)-logLik(GirlsGrowth.VCUN2))
+
+pval1 <- 0.5*(1-pchisq(xi1,1))
+
+pval1
+
+library(car)
+Anova(GirlsGrowth.VCUN0,type=3)
+summary(GirlsGrowth.VCUN0)
+
+
+Question 3
+
+bolus <- read.table("C:/Users/OUMAIMA/Desktop/RŽgression/bolus.txt",header = TRUE)
+library(gee)
+#GEE
+groupe<-relevel(factor(bolus$group),ref="2mg")
+gee_ar <- gee(count~groupe+time+groupe:time, id = id,
+              family = poisson(link="log"),
+              corstr = "AR-M", Mv=1,
+              data = bolus)
+summary(gee_ar)
+#GEE en Žliminant l'effet de l'interaction
+gee_ar1 <- gee(count~groupe+time, id = id,
+                         family = poisson(link="log"),
+                         corstr = "AR-M", Mv=1,
+                         data = bolus)
+summary(gee_ar1)
+L <- c(0,1,0)
+t(L)%*%gee_ar1$coefficients
+t(L)%*%gee_ar1R$coefficients+c(-1,1)*1.96*sqrt(t(L)%*%gee_ar1$robust.variance%*%L)
+#Estimation ponctuelle
+exp(t(L)%*%gee_ar1$coefficients)
+#IC ˆ 95%
+exp(t(L)%*%gee_ar1$coefficients+c(-1,1)*1.96*sqrt(t(L)%*%gee_ar1$robust.variance%*%L))
