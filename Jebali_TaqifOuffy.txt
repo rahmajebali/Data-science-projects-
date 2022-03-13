@@ -1,0 +1,218 @@
+#Exercice 1
+ex1 <- read.table("pollution.txt")
+#Taux de mortalité 
+B <- ex1$V17
+#mesures de nature environnementale et socio-démographique
+A1<-ex1$V2
+A2<-ex1$V3
+A3<-ex1$V4
+A4<-ex1$V5
+A5<-ex1$V6
+A6<-ex1$V7
+A7<-ex1$V8
+A8<-ex1$V9
+A9<-ex1$V10
+A10<-ex1$V11
+A11<-ex1$V12
+A12<-ex1$V13
+A13<-ex1$V14
+A14<-ex1$V15
+A15<-ex1$V16
+
+#La régression linéaire
+install.packages('olsrr')
+library('olsrr')
+
+# ajustement du modèle
+modele_complet <- lm(B ~ A1+A2+A3+A4+A5+A6+A7+A8+A9+A10+A11+A12+A13+A14+A15, data = ex1) 
+#  sortie d'information 
+summary(modele_complet)
+ols_regress(modele_complet)
+# calcul des VIF 
+ols_vif_tol(modele_complet) 
+ # indices de conditionnement et proportions de variance
+ols_coll_diag(modele_complet)
+
+# pour regler le problème de multicollinearite
+# On enleve A5,
+modele_complet_2 <- lm(B ~ A1+A2+A3+A4+A6+A7+A8+A9+A10+A11+A12+A13+A14+A15, data = ex1) # ajustement du modèle
+summary(modele_complet_2)
+ols_vif_tol(modele_complet_2) # calcul des VIF
+# On enleve A14
+modele_complet_2 <- lm(B ~ A1+A2+A3+A4+A5+A6+A7+A8+A9+A10+A11+A12+A13+A15, data = ex1) # ajustement du modèle
+summary(modele_complet_2)
+ols_vif_tol(modele_complet_2) # calcul des VIF
+# On enleve A13
+modele_complet_2 <- lm(B ~ A1+A2+A3+A4+A5+A6+A7+A8+A9+A10+A11+A12+A14+A15, data = ex1) # ajustement du modèle
+summary(modele_complet_2)
+ols_vif_tol(modele_complet_2) # calcul des VIF
+ols_coll_diag(modele_complet_2) # indices de conditionnement et proportions de variance
+
+# Tous les sous-modeles 
+all_possible <- ols_step_all_possible(modele_complet_2)
+as.data.frame(all_possible[all_possible$aic == min(all_possible$aic), ])
+modele_complet_SEL <- lm(B ~ A1+A2+A3+A6+A8+A9+A14, data = ex1) #  modèle sélectionnée
+summary(modele_complet_SEL)
+a.predire_AJU  <- data.frame(A1=40, A2=30, A3=80, A4=9, A5=3, A6=10, A7=77, A8=4100, A9=13, A10=46, A11=15, A12=25, A13=26, A14=145, A15=55) # B a prédire
+predict(modele_complet_SEL,newdata = a.predire_AJU,interval=c("prediction"),level=0.95)
+
+
+#Exercie 2
+ex2 <- read.table("processed.cleveland.data",sep=",",header=FALSE) 
+
+#Variable explicative  
+
+age<-ex2$X1 
+
+sex<-ex2$X2 
+
+cp<-ex2$X3 
+
+cp_1 <- ifelse(test = cp==1,yes = 1,no = 0) 
+
+cp_2 <- ifelse(test = cp==2,yes = 1,no = 0) 
+
+cp_3 <- ifelse(test = cp==3,yes = 1,no = 0) 
+
+trestbps<-ex2$X4 
+
+chol<-ex2$X5 
+
+fbs<-ex2$X6 
+
+restecg<-ex2$X7 
+
+restecg_1 <- ifelse(test = restecg==1,yes = 1,no = 0) 
+
+restecg_2 <- ifelse(test = restecg==2,yes = 1,no = 0) 
+
+thalach<-ex2$X8 
+
+exang<-ex2$X9 
+
+oldpeak<-ex2$X10 
+
+slope<-ex2$X11 
+
+slope_1 <- ifelse(test = slope==1,yes = 1,no = 0) 
+
+slope_2 <- ifelse(test = slope==2,yes = 1,no = 0) 
+
+ca<-ex2$X12 
+
+thal<-ex2$X13 
+
+thal_1 <- ifelse(test = thal==1,yes = 1,no = 0) 
+
+thal_2 <- ifelse(test = thal==2,yes = 1,no = 0) 
+
+Y<-ifelse(test = ex2$X14 > 0, yes = 1,no = 0)  
+
+modele_complet<- lm (Y~age+sex+cp_1+cp_2+cp_3+trestbps+chol+fbs+restecg_1+restecg_2+thalach+exang+oldpeak+slope_1+slope_2+ca+thal_1+thal_2,data = ex2,x = TRUE, y = TRUE) 
+
+library(olsrr) 
+
+ols_vif_tol(modele_complet) # calcul des VIF 
+
+# On enlève  ca, pour régler le problème de multicollinearite. 
+
+modele_complet1<- lm (Y~age+sex+cp_1+cp_2+cp_3+trestbps+chol+fbs+restecg_1+restecg_2+thalach+exang+oldpeak+slope_1+slope_2+thal_1+thal_2,data = ex2,x = TRUE, y = TRUE) 
+
+ols_vif_tol(modele_complet1) 
+
+# Pour la sÃ©lection, on doit laisser tomber les lignes avec des NA 
+
+ex2 <- ex2[complete.cases(ex2),] 
+
+modele_complet <-glm(Y~age+sex+cp_1+cp_2+cp_3+trestbps+chol+fbs+restecg_1+restecg_2+thalach+exang+oldpeak+slope_1+slope_2+thal_1+thal_2,family=binomial(link=logit), data = ex2,x = TRUE, y = TRUE) 
+
+summary(modele_complet) 
+
+modele_nul <- glm(Y ~ 1,family=binomial(link=logit),data = ex2,x = TRUE, y = TRUE) 
+
+summary(modele_nul) 
+
+install.packages("glmbb") 
+
+library(glmbb)# pour tous les sous-modeles 
+
+library(MASS) 
+
+# Methode d'inclusion 
+
+processed_cleveland.for <- stepAIC(modele_nul,trace=FALSE,direction="forward",scope=list(upper=" ~age+sex+cp_1+cp_2+cp_3+trestbps+chol+fbs+restecg_1+restecg_2+thalach+exang+oldpeak+slope_1+slope_2+thal_1+thal_2",lower="~1"),data= ex2) 
+
+processed_cleveland.for$anova 
+
+# Methode pas-Ã -pas 
+
+processed_cleveland.step <- stepAIC(modele_nul,trace=FALSE,direction="both",scope=list(upper="~ age+sex+cp_1+cp_2+cp_3+trestbps+chol+fbs+restecg_1+restecg_2+thalach+exang+oldpeak+slope_1+slope_2+thal_1+thal_2",  lower="~1"),data=ex2) 
+
+processed_cleveland.step$anova 
+
+# pour tous les sous-modeles 
+
+processed_cleveland.tous <- glmbb(Y~age+sex+cp_1+cp_2+cp_3+trestbps+chol+fbs+restecg_1+restecg_2+thalach+exang+oldpeak+slope_1+slope_2+thal_1+thal_2,Y~1,criterion="AIC",cutoff=3,family=binomial(link=logit), data = ex2) 
+
+summary(processed_cleveland.tous) 
+
+
+#Exercice 3
+#Chargement du jeu de donnÈes
+load("C:/Users/OUMAIMA/AppData/Local/Temp/Temp1_CASdatasets_1.0-10.zip/CASdatasets/data/ausprivauto0405.rda")
+donnees <- ausprivauto0405
+
+#variable offset
+ofs <- donnees$Exposure
+log.ofs <- log(ofs)
+donnees_1 <- data.frame(donnees,log.ofs)
+
+#MulticolinÈaritÈ
+library(olsrr)  
+modele_complet <- lm(ClaimNb ~ offset(Exposure) + VehValue + VehAge + VehBody + Gender +
+                       DrivAge, 
+                     data = donnees_1)
+# VIF
+ols_vif_tol(modele_complet) 
+
+# Premier modele, Poisson ordinaire
+m1.pois <- glm(ClaimNb~VehValue+VehAge+VehBody+Gender+DrivAge,
+               family=poisson(link="log"),data=donnees_1)
+summary(m1.pois)
+# Pour inclure Explosure comme offset:
+m1.pois.ofs <- glm(ClaimNb~VehValue+VehAge+VehBody+Gender+DrivAge+offset(log.ofs),
+                   family=poisson(link="log"),data=donnees_1)
+summary(m1.pois.ofs)
+
+# Meme modele, mais quasi Poisson
+m1.Qpois <- glm(ClaimNb~VehValue+VehAge+VehBody+Gender+DrivAge+offset(log.ofs),
+                family=quasipoisson(link="log"),data=donnees_1)
+summary(m1.Qpois)
+
+# Meme modele, mais loi binomiale negative
+library(MASS)
+m1.binneg <- glm.nb(ClaimNb~VehValue+VehAge+VehBody+Gender+DrivAge+offset(log.ofs),
+                    link="log",data=donnees_1)
+summary(m1.binneg)
+test= 2*(logLik(m1.binneg)-logLik(m1.pois.ofs))
+p_value <- 0.5*pchisq(test, df=1, lower.tail = FALSE)
+p_value
+
+modele_nul <- glm.nb(ClaimNb ~ 1,link="log" , data = donnees_1)
+summary(modele_nul)
+
+# Methode d'inclusion
+donnees_1.for <- stepAIC(modele_nul,trace=FALSE,direction="forward",
+                    scope=list(upper="~offset(Exposure) + VehValue + VehAge + VehBody + Gender + DrivAge",
+                               lower="~1"),data=donnees_1)
+donnees_1.for$anova
+# Methode d'exclusion
+donnees_1.back <- stepAIC(m1.binneg,trace=FALSE,direction="backward",
+                     scope=list(upper="~offset(Exposure) + VehValue + VehAge + VehBody + Gender + DrivAge",
+                                lower="~1"),data=donnees_1)
+donnees_1.back$anova
+# Methode pas-√ -pas
+donnees_1.step <- stepAIC(modele_nul,trace=FALSE,direction="both",
+                     scope=list(upper="~offset(Exposure) + VehValue + VehAge + VehBody + Gender + DrivAge",
+                                lower="~1"),data=donnees_1)
+donnees_1.step$anova 
